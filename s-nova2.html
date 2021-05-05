@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Vasarely Machine - Canvas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        html, body {
+            margin: 0;
+            overflow: hidden;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="vasarely"></canvas>
+</body>
+<script> 
+let canvas = document.getElementById('vasarely');
+canvas.width = document.body.clientWidth;
+canvas.height = document.body.clientHeight;
+
+const fold = (inval, lo, hi) => {
+    const b = hi - lo;
+    const b2 = b + b;
+    let c = (inval - lo) % b2;
+    if (c > b)
+        c = b2 - c;
+    return c + lo;
+}
+
+const ease = t => t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
+
+// number of columns
+const nx = 38;
+// number of rows
+const ny = 31;
+// number of repeats
+const r = 2;
+
+if (canvas.getContext) {
+    let ctx = canvas.getContext('2d');
+    init(ctx);
+    // draw(ctx, 0);
+}
+
+function init(ctx) {
+    // add event handler for window resize events
+    // needs to update canvas size and redraw
+    window.addEventListener('resize', (event) => {
+        canvas.width = document.body.clientWidth;
+        canvas.height = document.body.clientHeight;
+        // draw(ctx, 0);
+    });
+    let start, tick = null;
+
+    const animLoop = time => {
+        if (!start) start = time;
+        tick += 1;
+        draw(ctx, tick);
+        window.requestAnimationFrame(animLoop);
+    }
+
+    window.requestAnimationFrame(animLoop);
+}
+
+function draw(ctx, tick) {
+    // TODO: calculate ideal spacing size for window, arbitrary for now
+    const spacing = 1;
+    // calculate ideal square size based on window size, number of rows, and spacing
+    const squareSize = (ctx.canvas.height - 2 * spacing - ny * spacing) / ny;
+    // calculate offset values for centering
+    const xOffset = (ctx.canvas.width / 2) - spacing / 2 - nx * (squareSize + spacing) / 2 + spacing;
+    const yOffset = (ctx.canvas.height / 2) - spacing / 2 - ny * (squareSize + spacing) / 2 + spacing;
+
+    tick *= 0.33;
+
+    ctx.fillStyle = 'hsl(60, 30%, 89%)';
+    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.fillStyle = 'hsl(60, 2%, 21%)';
+    for (let y = 0; y < ny; y++) {
+        // ctx.fillStyle = `hsl(${y*ny+tick%360}, 60%, 50%)`;
+        for (let x = 0; x < nx; x++) {
+            let s = Math.max(1, squareSize - fold(Math.min(nx+1, 20+Math.sin((x+y+ease(fold(tick/1000, 0, 1.0))*1000)/8)*nx/2), 0, nx));
+            let cx = (squareSize - s) / 2;
+            let xPos = cx + xOffset + (squareSize * x) + (x * spacing);
+            let yPos = cx + yOffset + (squareSize * y) + (y * spacing);
+            ctx.translate(xPos+s/2, yPos+s/2);
+            // ctx.rotate((tick+x*y)*Math.PI/180);
+            ctx.rotate(tick/1000+ease(fold(x, 0, nx/r)/nx)*nx * ease(fold(y, 0, ny/r)/ny)*ny*r*ease(fold(tick, -nx, nx)/nx)*4/10*Math.PI/180);
+            ctx.fillStyle = 'hsl(60, 2%, 100%)';
+            ctx.fillRect(-s/4, -s/4, s, s);
+            ctx.fillStyle = 'hsl(60, 2%, 21%)';
+            ctx.fillRect(-s/2, -s/2, s, s);
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            // if (y===0) ctx.fillText(Math.ceil(s), xPos, yPos - cx);
+        }
+    }
+}
+</script>
+</html>
