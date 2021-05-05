@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>basic shapes animation study</title>
+    <style type="text/css">
+        html {
+          box-sizing: border-box;
+          font-size: 16px;
+      }
+
+      *, *:before, *:after {
+          box-sizing: inherit;
+      }
+
+      body, h1, h2, h3, h4, h5, h6, p, ol, ul {
+          margin: 0;
+          padding: 0;
+          font-weight: normal;
+      }
+  </style>
+</head>
+
+<body style="background-color: hsl(146,11%,75%); overflow: hidden;">
+    <canvas id="mood-board"></canvas>
+    <svg width="710" height="356" viewBox="0 0 710 356" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M47.1348 216.84V356H0.259766V0.53125H131.363C170.263 0.53125 200.699 10.4596 222.672 30.3164C244.807 50.1732 255.875 76.459 255.875 109.174C255.875 143.679 245.051 170.29 223.404 189.008C201.92 207.562 171.077 216.84 130.875 216.84H47.1348ZM47.1348 178.51H131.363C156.428 178.51 175.634 172.65 188.98 160.932C202.327 149.05 209 131.96 209 109.662C209 88.5033 202.327 71.5762 188.98 58.8809C175.634 46.1855 157.324 39.5938 134.049 39.1055H47.1348V178.51Z" fill="black"/>
+        <path d="M406.979 263.227H258.053L224.605 356H176.266L312.008 0.53125H353.023L489.01 356H440.914L406.979 263.227ZM272.213 224.652H393.062L332.516 58.3926L272.213 224.652Z" fill="black"/>
+        <path d="M541.48 317.67H709.938V356H494.361V0.53125H541.48V317.67Z" fill="black"/>
+    </svg>
+
+</body>
+
+
+<script>
+    const graphics_engine = ((context) => {
+        let ctx = context;
+
+        function fillRect(x, y, size, origin=0.5) {
+            ctx.translate(x + size * origin, y + size * origin);
+            ctx.rotate(60 * Math.PI / 180);
+            ctx.fillRect(-size / 2, -size / 2, size, size);
+            ctx.resetTransform();
+        }
+
+        function fillEllipse(x, y, size) {
+            ctx.translate(x - size / 4, y);
+            ctx.beginPath();
+            ctx.ellipse(0, 0, size / 2, size / 2, 0, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.resetTransform();
+        }
+
+        function fillTriangle(x, y, size) {
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + size / 2, y + size);
+            ctx.lineTo(x - size / 2, y + size);
+            ctx.fill();
+        }
+
+        return {
+            fillRect: fillRect,
+            fillEllipse: fillEllipse,
+            fillTriangle: fillTriangle
+        }
+    });
+
+    function run_with_canvas(canvas) {
+        let timer, tick = 0, start;
+        let doc = document.documentElement;
+        let ctx = canvas.getContext('2d');
+        let g = graphics_engine(ctx);
+        let dx = 0.3;
+
+        window.addEventListener('resize', () => {
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                canvas.width = doc.clientWidth;
+                canvas.height = doc.clientHeight;
+                draw();
+            }, 75);
+        });
+        canvas.width = doc.clientWidth;
+        canvas.height = doc.clientHeight;
+
+        function draw() {
+            const size = canvas.height / 7;
+            const margin = canvas.width / 20;
+            const x = canvas.width - margin - size;
+            const y = canvas.height - margin - size;
+
+            // clear "screen"
+            ctx.fillStyle = 'hsl(146,11%,75%)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = 'hsl(219,16%,17%)';
+            g.fillRect(x - 0.25 * tick, y - 0.2 * tick, size + tick, 0.5);
+
+            ctx.fillStyle = 'hsl(216,57%,77%)';
+            g.fillEllipse(x - tick * dx, y - tick * 0.1, size + tick * 0.1);
+
+            if (tick > 100) {
+                ctx.fillStyle = 'hsl(85,32%,76%)';
+                g.fillTriangle(x, y - (Math.sin((tick-100)/100)) * size/2, size - (tick - 100) * 0.025);
+            }
+
+            ctx.fillStyle = 'hsl(104,57%,77%)';
+            g.fillTriangle(x, y, size + tick * 0.025);
+
+            // dx = dx * 1.001;
+        }
+
+        const animLoop = time => {
+            if (!start) start = time;
+            tick += 1;
+            draw();
+            window.requestAnimationFrame(animLoop);
+        }
+
+        window.requestAnimationFrame(animLoop);
+
+        // draw();
+    }
+</script>
+
+
+<script>
+    canvas = document.getElementById('mood-board');
+    if (canvas.getContext('2d')) {
+        run_with_canvas(canvas);
+    } else {
+        // sorry boss, no action for you
+    }
+</script>
+
+</html>
